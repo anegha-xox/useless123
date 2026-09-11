@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Gaslight Mirror — Zero-Lag Emotional Sabotage</title>
+  <meta name="description"
+    content="A real-time, client-side webcam mirror that detects your facial expressions and responds with absurd theatrical mockery, guilt-trips, and countdown threats.">
+
+  <!-- Style Sheets -->
+  <link rel="stylesheet" href="/static/css/style.css">
+
+  <!-- Face-API.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- Application Logic -->
+  <script defer src="/static/js/app.js"></script>
+
+  <style>
+    /* API Modal & Cyber Enhancements */
+    .api-chip {
+      cursor: pointer;
+      background: rgba(0, 240, 255, 0.12) !important;
+      border: 1px solid var(--cyan) !important;
+      color: var(--cyan) !important;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+      padding: 5px 12px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .api-chip:hover {
+      background: rgba(0, 240, 255, 0.25) !important;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+    }
+
+    .api-modal-card {
+      max-width: 620px;
+      width: 100%;
+      background: #090e17;
+      color: var(--paper);
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 240, 255, 0.15);
+      font-family: var(--font-mono);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .modal-backdrop.open .api-modal-card {
+      transform: scale(1);
+    }
+
+    .api-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-dim);
+      padding-bottom: 12px;
+    }
+
+    .api-modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .api-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .api-field label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .api-input-wrap {
+      display: flex;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .api-input-wrap:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.25);
+    }
+
+    .api-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--paper);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      padding: 10px 12px;
+    }
+
+    .api-btn-small {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      border-left: 1px solid var(--border-dim);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 0 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .api-btn-small:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--paper);
+    }
+
+    .api-output-box {
+      background: #04060a;
+      border: 1px solid var(--border-dim);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 0.78rem;
+      color: var(--acid);
+      max-height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+
+    .api-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn-cyber-primary {
+      flex: 1;
+      background: var(--cyan);
+      color: #000;
+      border: none;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cyber-primary:hover {
+      background: #4ef5ff;
+      box-shadow: 0 0 14px rgba(0, 240, 255, 0.5);
+    }
+
+    .btn-cyber-secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--paper);
+      border: 1px solid var(--border-dim);
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 0.82rem;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cyber-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Side-by-Side Camera & Video Stage */
+    .camera-stage-container {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      width: 100%;
+      position: relative;
+    }
+
+    .camera-stage-container .viewport-wrapper {
+      flex: 1;
+      min-width: 0;
+      transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* Side Video Panel (Playing video on the side of the camera) */
+    .side-video-panel {
+      width: 0;
+      min-width: 0;
+      opacity: 0;
+      visibility: hidden;
+      overflow: hidden;
+      border-radius: var(--radius-lg);
+      background: #060a12;
+      border: 2px solid transparent;
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+        min-width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.3s ease,
+        border-color 0.3s ease,
+        box-shadow 0.3s ease;
+    }
+
+    .side-video-panel.active {
+      width: 280px;
+      min-width: 250px;
+      opacity: 1;
+      visibility: visible;
+      border-color: var(--cyan);
+      box-shadow: 0 0 30px rgba(0, 240, 255, 0.35), 0 16px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    @media (max-width: 860px) {
+      .camera-stage-container {
+        flex-direction: column;
+      }
+
+      .side-video-panel.active {
+        width: 100%;
+        min-width: 0;
+        height: 380px;
+      }
+    }
+
+    .side-video-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: rgba(0, 240, 255, 0.12);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.25);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .side-video-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .side-video-close {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      border-radius: 4px;
+      transition: all 0.15s;
+    }
+
+    .side-video-close:hover {
+      background: rgba(255, 42, 95, 0.4);
+      color: #fff;
+    }
+
+    .side-video-frame {
+      flex: 1;
+      width: 100%;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .side-video-frame iframe,
+    .side-video-frame video {
+      width: 100%;
+      height: 100%;
+      border: none;
+      flex: 1;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .side-video-footer {
+      padding: 8px 10px;
+      background: rgba(0, 0, 0, 0.65);
+      border-top: 1px solid var(--border-dim);
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--acid);
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- CRT Atmosphere -->
+  <div class="crt-overlay" id="crtOverlay"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- Portal / Welcome Screen -->
+  <div class="portal-screen" id="portalScreen">
+    <div class="portal-card">
+      <div class="portal-icon">🪞⚡</div>
+      <h1 class="portal-title">The Gaslight <em>Mirror</em></h1>
+      <p class="portal-desc">
+        A neural-powered mirror designed to actively sabotage your ego. Look into the lens at your own risk.
+      </p>
+
+      <div class="portal-rules">
+        <div class="rule-row">
+          <span class="rule-pill mock">Sad / Angry</span>
+          <span>Unforgiving laughter, confetti storms, and spinning skulls.</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-pill guilt">Happy</span>
+          <span>Desaturated visuals, cartoon eye-tears, and guilt-trip rain.</span>
+        </div>
+        <div class="rule-row">
+          <span class="rule-pill threat">Neutral &gt; 3s</span>
+          <span>Boring detection alarms and imminent emergency punishment.</span>
+        </div>
+      </div>
+
+      <button id="startBtn" class="btn-primary">
+        <span>ENTER THE MIRROR</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M12 5l7 7-7 7" />
+        </svg>
+      </button>
+      <div class="portal-notice">
+        ⚡ 100% Client-Side Detection + Real-Time Groq AI Verbal Sabotage
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Container -->
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-logo">
+          Gaslight <span>Mirror</span>
+        </div>
+        <div class="badge-tag">v1.0 Neural</div>
+      </div>
+
+      <div class="header-telemetry">
+        <button id="btnOpenApiModal" class="api-chip" title="Click to view API endpoint & test model">
+          <span>⚡ API:</span>
+          <span id="headerModelTag">qwen/qwen3.8-27b</span>
+        </button>
+        <div class="telemetry-item">
+          <span>FPS:</span>
+          <span class="telemetry-value" id="fpsDisplay">--</span>
+        </div>
+        <div class="telemetry-item">
+          <span>LATENCY:</span>
+          <span class="telemetry-value" id="latencyDisplay">--ms</span>
+        </div>
+        <div class="status-chip idle" id="statusChip">
+          <span class="status-dot"></span>
+          <span id="statusLabel">SCANNING</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mirror Layout -->
+    <main class="mirror-layout">
+      <!-- Stage Section -->
+      <section class="stage-panel">
+        <div class="camera-stage-container" id="cameraStageContainer">
+          <div class="viewport-wrapper" id="viewportWrapper">
+            <!-- WebCam Video Element (Mirrored via CSS) -->
+            <video id="webcamVideo" autoplay playsinline muted></video>
+
+            <!-- FX & Overlays Canvas (Rendered at exact resolution, un-mirrored) -->
+            <canvas id="fxCanvas"></canvas>
+
+            <!-- Cyber Corner Reticles -->
+            <div class="corner-reticle corner-tl"></div>
+            <div class="corner-reticle corner-tr"></div>
+            <div class="corner-reticle corner-bl"></div>
+            <div class="corner-reticle corner-br"></div>
+
+            <!-- Scanning Indicator -->
+            <div class="scanning-hud" id="scanningHud">
+              <div class="radar-spinner"></div>
+              <div class="scanning-text" id="scanningText">LOCKING TARGET...</div>
+            </div>
+
+            <!-- Threat HUD (Boredom > 3s) -->
+            <div class="threat-hud" id="threatHud">
+              <div class="threat-title">⚠️ BOREDOM DETECTED ⚠️</div>
+              <div class="threat-subtitle">EXPRESSION CRITICALLY DULL — RETALIATING IN</div>
+              <div class="threat-countdown" id="countdownValue">3</div>
+            </div>
+          </div>
+
+          <!-- Video on the SIDE of Camera -->
+          <div class="side-video-panel" id="sideVideoPanel">
+            <div class="side-video-header">
+              <div class="side-video-title">
+                <span id="sideVideoIcon">⚠️</span>
+                <span id="sideVideoTitle">VIDEO PROTOCOL</span>
+              </div>
+              <button class="side-video-close" id="btnCloseSideVideo" title="Close Video">✕</button>
+            </div>
+            <div class="side-video-frame">
+              <video id="sideVideoPlayer" playsinline loop preload="auto"></video>
+            </div>
+            <div class="side-video-footer" id="sideVideoFooter">
+              EMERGENCY VIDEO DISPATCHED
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtitle & Roasting Caption Bar -->
+        <div class="subtitle-bar" id="subtitleBar">
+          <span class="caption-label">VERBAL COUNTER-MEASURE</span>
+          <div class="caption-text" id="captionText">Initializing facial sentiment destabilizer...</div>
+        </div>
+      </section>
+
+      <!-- Sidebar Telemetry & Controls -->
+      <aside class="sidebar-panel">
+        <!-- Live Expression Gauges -->
+        <div class="panel-card">
+          <div class="panel-title">
+            <span>FACIAL METRICS</span>
+            <span id="targetFaceStatus">NO TARGET</span>
+          </div>
+
+          <div class="emotion-list">
+            <div class="emotion-row neutral">
+              <div class="emotion-meta">
+                <span>NEUTRAL</span>
+                <span id="valNeutral">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barNeutral"></div>
+              </div>
+            </div>
+
+            <div class="emotion-row happy">
+              <div class="emotion-meta">
+                <span>HAPPY</span>
+                <span id="valHappy">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barHappy"></div>
+              </div>
+            </div>
+
+            <div class="emotion-row sad">
+              <div class="emotion-meta">
+                <span>SAD</span>
+                <span id="valSad">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barSad"></div>
+              </div>
+            </div>
+
+            <div class="emotion-row angry">
+              <div class="emotion-meta">
+                <span>ANGRY</span>
+                <span id="valAngry">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barAngry"></div>
+              </div>
+            </div>
+
+            <div class="emotion-row fearful">
+              <div class="emotion-meta">
+                <span>FEARFUL</span>
+                <span id="valFearful">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barFearful"></div>
+              </div>
+            </div>
+
+            <div class="emotion-row disgusted">
+              <div class="emotion-meta">
+                <span>DISGUSTED</span>
+                <span id="valDisgusted">0%</span>
+              </div>
+              <div class="emotion-bar-track">
+                <div class="emotion-bar-fill" id="barDisgusted"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Boredom Countdown Bar -->
+          <div class="boredom-section">
+            <div class="boredom-header">
+              <span>BOREDOM TIMER</span>
+              <span id="boredomSeconds">0.0s / 3.0s</span>
+            </div>
+            <div class="boredom-meter-track">
+              <div class="boredom-meter-fill" id="boredomBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls Deck -->
+        <div class="panel-card controls-card">
+          <div class="control-group">
+            <span class="control-label">ROAST INTENSITY</span>
+            <div class="segmented-control" id="intensitySelector">
+              <button class="segmented-btn" data-intensity="mild">MILD</button>
+              <button class="segmented-btn active" data-intensity="sarcastic">SARCASTIC</button>
+              <button class="segmented-btn" data-intensity="unhinged">UNHINGED</button>
+            </div>
+          </div>
+
+          <div class="action-grid">
+            <button class="action-btn" id="btnAudioToggle">
+              <span id="audioIcon">🔊</span>
+              <span id="audioLabel">AUDIO ON</span>
+            </button>
+
+            <button class="action-btn" id="btnOverlayToggle">
+              <span>🎯</span>
+              <span id="overlayLabel">LANDMARKS</span>
+            </button>
+
+            <button class="action-btn btn-snapshot" id="btnSnapshot">
+              <span>📸</span>
+              <span>CAPTURE RECEIPT</span>
+            </button>
+
+            <button class="action-btn" id="btnOpenApiModalSidebar"
+              style="grid-column: span 2; background: rgba(0, 240, 255, 0.08); border-color: rgba(0, 240, 255, 0.3); color: var(--cyan);">
+              <span>⚡</span>
+              <span>API &amp; MODEL RUNNER</span>
+            </button>
+
+            <button class="action-btn btn-exit" id="btnExit">
+              <span>⛔</span>
+              <span>EMERGENCY EXIT</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Snapshot Modal ("The Roast Receipt") -->
+  <div class="modal-backdrop" id="receiptModal">
+    <div class="receipt-card">
+      <div class="receipt-header">
+        <h3>THE GASLIGHT RECEIPT</h3>
+        <p>OFFICIAL EMOTIONAL AUDIT REPORT</p>
+      </div>
+
+      <div class="receipt-preview-box">
+        <img id="receiptImage" alt="Snapshot Receipt Preview">
+      </div>
+
+      <div class="receipt-metadata">
+        <div class="receipt-row">
+          <span>TIMESTAMP:</span>
+          <span id="receiptTime">--:--:--</span>
+        </div>
+        <div class="receipt-row">
+          <span>DOMINANT STATE:</span>
+          <span id="receiptState">UNKNOWN</span>
+        </div>
+        <div class="receipt-row">
+          <span>VERDICT SCORE:</span>
+          <span id="receiptScore">100% ROASTED</span>
+        </div>
+      </div>
+
+      <div class="receipt-caption-box" id="receiptCaption">
+        "Your face has been thoroughly audited."
+      </div>
+
+      <div class="receipt-actions">
+        <button class="btn-download-receipt" id="btnDownloadReceipt">DOWNLOAD PNG</button>
+        <button class="btn-close-modal" id="btnCloseModal">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== API & MODEL RUNNER MODAL ==================== -->
+  <div class="modal-backdrop" id="apiModal">
+    <div class="api-modal-card">
+      <div class="api-modal-header">
+        <h3><span>⚡</span> API ENDPOINT & MODEL RUNNER</h3>
+        <button class="btn-close-modal" id="btnCloseApiModal"
+          style="background: transparent; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer;">✕</button>
+      </div>
+
+      <div class="api-field">
+        <label>
+          <span>API Key</span>
+          <span id="apiModalKeyBadge" style="color: var(--cyan);">Groq Primary Key</span>
+        </label>
+        <div class="api-input-wrap">
+          <input type="password" id="modalApiKey" class="api-input"
+            value="" placeholder="Paste Groq or NIM API Key (or leave blank for server default)">
+          <button class="api-btn-small" onclick="toggleModalKeyVisibility()">👁️</button>
+          <button class="api-btn-small" onclick="pasteModalKey()">📋 PASTE</button>
+        </div>
+      </div>
+
+      <div class="api-field">
+        <label>
+          <span>Model Name</span>
+          <span style="color: var(--acid);">POST /api/run</span>
+        </label>
+        <div class="api-input-wrap">
+          <input type="text" id="modalModelName" class="api-input" value="qwen/qwen3.8-27b"
+            placeholder="e.g. qwen/qwen3.8-27b, openai/gpt-oss-120b">
+        </div>
+      </div>
+
+      <div class="api-field">
+        <label>
+          <span>Test Prompt / Instruction</span>
+          <span id="modalRunLatency" style="color: var(--cyan);">Ready</span>
+        </label>
+        <div class="api-input-wrap">
+          <input type="text" id="modalPrompt" class="api-input"
+            value="Generate a sharp, biting 1-sentence roast of someone smiling at their webcam."
+            placeholder="Enter prompt to run through API...">
+        </div>
+      </div>
+
+      <div class="api-field">
+        <label>Model Response / Output</label>
+        <div class="api-output-box" id="modalOutputBox">Click "RUN MODEL THROUGH API" to test this endpoint live...
+        </div>
+      </div>
+
+      <div class="api-modal-actions">
+        <button class="btn-cyber-primary" id="btnModalRun" onclick="runModelThroughApi()">
+          <span>🚀 RUN MODEL THROUGH API</span>
+        </button>
+        <button class="btn-cyber-secondary" onclick="copyCurlSnippet()">
+          <span>📋 COPY cURL</span>
+        </button>
+        <button class="btn-cyber-secondary" onclick="closeApiModal()">
+          <span>DONE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global API Configuration Manager
+    window.GaslightApi = {
+      getKey() {
+        return localStorage.getItem('gaslight_api_key') || document.getElementById('modalApiKey').value.trim() || '';
+      },
+      getModel() {
+        return localStorage.getItem('gaslight_model') || document.getElementById('modalModelName').value.trim() || 'qwen/qwen3.8-27b';
+      }
+    };
+
+    function openApiModal() {
+      document.getElementById('apiModal').classList.add('open');
+      document.getElementById('modalApiKey').value = window.GaslightApi.getKey();
+      document.getElementById('modalModelName').value = window.GaslightApi.getModel();
+    }
+
+    function closeApiModal() {
+      const key = document.getElementById('modalApiKey').value.trim();
+      const model = document.getElementById('modalModelName').value.trim();
+      if (key) localStorage.setItem('gaslight_api_key', key);
+      if (model) {
+        localStorage.setItem('gaslight_model', model);
+        document.getElementById('headerModelTag').textContent = model.split('/').pop();
+      }
+      document.getElementById('apiModal').classList.remove('open');
+    }
+
+    function toggleModalKeyVisibility() {
+      const inp = document.getElementById('modalApiKey');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    async function pasteModalKey() {
+      try {
+        const t = await navigator.clipboard.readText();
+        if (t) {
+          document.getElementById('modalApiKey').value = t.trim();
+          localStorage.setItem('gaslight_api_key', t.trim());
+        }
+      } catch (e) {
+        console.warn('Clipboard read error:', e);
+      }
+    }
+
+    async function runModelThroughApi() {
+      const btn = document.getElementById('btnModalRun');
+      const out = document.getElementById('modalOutputBox');
+      const lat = document.getElementById('modalRunLatency');
+      const key = document.getElementById('modalApiKey').value.trim();
+      const model = document.getElementById('modalModelName').value.trim();
+      const prompt = document.getElementById('modalPrompt').value.trim();
+
+      btn.disabled = true;
+      btn.innerText = "RUNNING MODEL...";
+      out.innerText = "Connecting to /api/run endpoint...";
+      lat.innerText = "In flight...";
+
+      try {
+        const t0 = performance.now();
+        const res = await fetch('/api/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            api_key: key,
+            model: model,
+            prompt: prompt
+          })
+        });
+        const data = await res.json();
+        const dur = Math.round(performance.now() - t0);
+
+        if (data.status === 'success') {
+          lat.textContent = `${data.duration_ms}ms server (${dur}ms total)`;
+          lat.style.color = "var(--acid)";
+          out.textContent = data.content;
+        } else {
+          lat.textContent = "Error";
+          lat.style.color = "var(--alarm)";
+          out.textContent = `Error: ${data.message || JSON.stringify(data)}`;
+        }
+      } catch (err) {
+        lat.textContent = "Network Error";
+        lat.style.color = "var(--alarm)";
+        out.textContent = "Failed to communicate with /api/run: " + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "🚀 RUN MODEL THROUGH API";
+      }
+    }
+
+    function copyCurlSnippet() {
+      const key = window.GaslightApi.getKey();
+      const model = window.GaslightApi.getModel();
+      const curl = `curl -X POST http://localhost:5000/api/run \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "api_key": "${key}",\n    "model": "${model}",\n    "prompt": "Hello from curl running through API"\n  }'`;
+      navigator.clipboard.writeText(curl);
+      alert("cURL command copied to clipboard!");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btnOpenApiModal').addEventListener('click', openApiModal);
+      document.getElementById('btnOpenApiModalSidebar').addEventListener('click', openApiModal);
+      document.getElementById('btnCloseApiModal').addEventListener('click', closeApiModal);
+
+      // Restore saved model tag if any
+      const savedModel = localStorage.getItem('gaslight_model');
+      if (savedModel) {
+        document.getElementById('headerModelTag').textContent = savedModel.split('/').pop();
+      }
+    });
+  </script>
+</body>
+
+</html>
